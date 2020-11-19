@@ -37,15 +37,15 @@ struct Rider;
 fn is_car_full(driver_name: &'static str, seats: &Vec<&'static str>, drivers: &Vec<Person<Driver>>) -> bool {
     let found = drivers.iter().find(|candidate| candidate.name == driver_name);
 
-    return match found {
+    match found {
         Some(Person { variant: Some(driver), .. }) => driver.total_space == seats.len(),
         _ => true // default
-    };
+    }
 }
 
 // loop through `assignments` ref
 fn rider_is_taken(rider_name: &'static str, assignments: &HashMap<&'static str, Vec<&'static str>>) -> bool {
-    true
+    assignments.values().any(|list| list.contains(&rider_name))
 }
 
 fn strongest_match(rider_name: &'static str, driver_name: &'static str, assignments: &HashMap<&'static str, Vec<&'static str>>) -> bool {
