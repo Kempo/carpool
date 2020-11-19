@@ -1,47 +1,99 @@
 use std::collections::HashMap;
 
-trait Participant {
-    fn new(&self, name: &'static str, preferences: Vec<&'static str>, optional_space: Option<usize>) -> Result<Self, &'static str>
-        where Self : Sized;
-    
-    fn get_name(&self) -> &'static str;
+struct Person<T> {
+    name: &'static str,
+    preferences: Vec<&'static str>,
+    variant: Option<T>
+}
+
+impl Person<Driver> {
+    fn new(name: &'static str, preferences: Vec<&'static str>, total_space: usize) -> Self {
+        Self {
+            name,
+            preferences,
+            variant: Some(Driver {
+                total_space
+            })
+        }
+    }
+}
+
+impl Person<Rider> {
+    fn new(name: &'static str, preferences: Vec<&'static str>) -> Self {
+        Self {
+            name, 
+            preferences,
+            variant: None
+        }
+    }
 }
 
 struct Driver {
-    name: &'static str,
-    preferences: Vec<&'static str>,
-    car_capacity: usize
+    total_space: usize
 }
 
-impl Participant for Driver {
-    fn new(&self, name: &'static str, preferences: Vec<&'static str>, space: Option<usize>) -> Result<Driver, &'static str> {
-        return match space {
-            Some(size) => Ok(Driver {
-                name, 
-                preferences,
-                car_capacity: size
-            }),
-            None => Err("Cannot create Driver without a provided car space.")
-        };
-    }
+struct Rider;
 
-    fn get_name(&self) -> &'static str {
-        self.name
-    }
+fn is_car_full(driver_name: &'static str, seats: &Vec<&'static str>, drivers: &Vec<Person<Driver>>) -> bool {
+    let found = drivers.iter().find(|candidate| candidate.name == driver_name);
+
+    if let Some(person) = found {
+        if let Some(driver) = &person.variant {
+            return driver.total_space == seats.len()
+        }
+    } 
+    
+    true
 }
 
-struct Rider {
-    name: &'static str,
-    preferences: Vec<&'static str>
+// loop through `assignments` ref
+fn rider_is_taken(rider_name: &'static str, assignments: &HashMap<&'static str, Vec<&'static str>>) -> bool {
+    true
+}
+
+fn strongest_match(rider_name: &'static str, driver_name: &'static str, assignments: &HashMap<&'static str, Vec<&'static str>>) -> bool {
+    true
 }
 
 fn main() {
 
-    let drivers: Vec<Driver> = vec![];
-    let riders: Vec<Rider> = vec![];
+    let drivers: Vec<Person<Driver>> = vec![
+        Person::<Driver>::new("Eric", vec!["Tom", "Max"], 3),
+        Person::<Driver>::new("Charles", vec!["Max", "Tom"], 3)
+    ];
+
+    let riders: Vec<Person<Rider>> = vec![
+        Person::<Rider>::new("Tom", vec!["Eric", "Charles"]),
+        Person::<Rider>::new("Max", vec!["Charles", "Eric"]),
+    ];
+
+    let total_riders = riders.len();
+    let mut filled: usize = 0;
 
     // <driver_name, [rider1, rider2]>
     let mut assignments: HashMap<&'static str, Vec<&'static str>> = HashMap::new();
+
+    while filled < total_riders {
+        for rider in &riders {
+            if !rider_is_taken(rider.name, &assignments) {
+                for pref_name in &rider.preferences {
+                    match assignments.get(pref_name) {
+                        Some(car_val) => {
+                            if !is_car_full(pref_name, car_val, &drivers) && strongest_match(rider.name, pref_name, &assignments) {
+                                if let Some(car) = assignments.get_mut(pref_name) {
+                                    car.push(rider.name);
+                                    filled += 1;
+                                }
+                            }
+                        },
+                        None => { 
+                            println!("Cannot identify driver. Skipping...");
+                        }
+                    };
+                }
+            }
+        }
+    }
 }
 
 // Initialize with preferences for both riders and drivers
