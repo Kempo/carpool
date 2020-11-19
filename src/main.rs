@@ -37,13 +37,10 @@ struct Rider;
 fn is_car_full(driver_name: &'static str, seats: &Vec<&'static str>, drivers: &Vec<Person<Driver>>) -> bool {
     let found = drivers.iter().find(|candidate| candidate.name == driver_name);
 
-    if let Some(person) = found {
-        if let Some(driver) = &person.variant {
-            return driver.total_space == seats.len()
-        }
-    } 
-    
-    true
+    return match found {
+        Some(Person { variant: Some(driver), .. }) => driver.total_space == seats.len(),
+        _ => true // default
+    };
 }
 
 // loop through `assignments` ref
