@@ -71,13 +71,15 @@ fn main() {
     println!("Starting...");
 
     let drivers: Vec<Person<Driver>> = vec![
-        Person::<Driver>::new("Eric", vec!["Tom", "Max"], 3),
-        Person::<Driver>::new("Charles", vec!["Max", "Tom"], 3)
+        Person::<Driver>::new("Eric", vec!["Tom", "Tim", "Max", "Leonardo"], 3),
+        Person::<Driver>::new("Charles", vec!["Max", "Leonardo", "Tom", "Tim"], 3)
     ];
 
     let riders: Vec<Person<Rider>> = vec![
         Person::<Rider>::new("Tom", vec!["Eric", "Charles"]),
         Person::<Rider>::new("Max", vec!["Charles", "Eric"]),
+        Person::<Rider>::new("Leonardo", vec!["Charles", "Eric"]),
+        Person::<Rider>::new("Tim", vec!["Eric", "Charles"])
     ];
 
     let total_riders = riders.len();
