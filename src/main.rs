@@ -34,11 +34,11 @@ struct Driver {
 
 struct Rider;
 
-fn is_car_full(driver_name: &'static str, seats: &Vec<&'static str>, drivers: &Vec<Person<Driver>>) -> bool {
+fn is_car_full(driver_name: &'static str, space: usize, drivers: &Vec<Person<Driver>>) -> bool {
     let found = drivers.iter().find(|candidate| candidate.name == driver_name);
 
     match found {
-        Some(Person { variant: Some(driver), .. }) => driver.total_space == seats.len(),
+        Some(Person { variant: Some(driver), .. }) => driver.total_space == space,
         _ => true // default
     }
 }
@@ -56,8 +56,8 @@ fn strongest_match(rider_name: &'static str, driver_name: &'static str, assignme
     if let Some(driver) = option {
         let first_available_pref = driver.preferences.iter().find(|r| !rider_is_taken(r, assignments));
 
-        match first_available_pref {
-            Some(name) => name == &rider_name,
+        return match first_available_pref {
+            Some(name) => *name == rider_name,
             None => false
         };
     }
@@ -68,6 +68,7 @@ fn strongest_match(rider_name: &'static str, driver_name: &'static str, assignme
 }
 
 fn main() {
+    println!("Starting...");
 
     let drivers: Vec<Person<Driver>> = vec![
         Person::<Driver>::new("Eric", vec!["Tom", "Max"], 3),
@@ -89,22 +90,16 @@ fn main() {
         for rider in &riders {
             if !rider_is_taken(rider.name, &assignments) {
                 for pref_name in &rider.preferences {
-                    match assignments.get(pref_name) {
-                        Some(car_val) => {
-                            if !is_car_full(pref_name, car_val, &drivers) && strongest_match(rider.name, pref_name, &assignments, &drivers) {
-                                // FIX no actual insertion of driver keys to hashmap
-                                if let Some(car) = assignments.get_mut(pref_name) {
-                                    println!("Assigning rider {} to driver {}", rider.name, pref_name);
-                                    car.push(rider.name);
-                                    
-                                    filled += 1;
-                                }
-                            }
-                        },
-                        None => { // FIX
-                            println!("Cannot identify driver. Skipping...");
+                    let car = assignments.entry(pref_name).or_insert_with(|| vec![]);
+
+                    if !is_car_full(pref_name, car.len(), &drivers) && strongest_match(rider.name, pref_name, &assignments, &drivers) {
+                        if let Some(car) = assignments.get_mut(pref_name) {
+                            println!("Assigning rider {} to driver {}", rider.name, pref_name);
+                            car.push(rider.name);
+                            
+                            filled += 1;
                         }
-                    };
+                    }
                 }
             }
         }
