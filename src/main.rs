@@ -3,7 +3,7 @@ use std::collections::HashMap;
 struct Person<T> {
     name: &'static str,
     preferences: Vec<&'static str>,
-    variant: Option<T>
+    variant: Option<T>,
 }
 
 impl Person<Driver> {
@@ -11,9 +11,7 @@ impl Person<Driver> {
         Self {
             name,
             preferences,
-            variant: Some(Driver {
-                total_space
-            })
+            variant: Some(Driver { total_space }),
         }
     }
 }
@@ -21,44 +19,60 @@ impl Person<Driver> {
 impl Person<Rider> {
     fn new(name: &'static str, preferences: Vec<&'static str>) -> Self {
         Self {
-            name, 
+            name,
             preferences,
-            variant: None
+            variant: None,
         }
     }
 }
 
 struct Driver {
-    total_space: usize
+    total_space: usize,
 }
 
 struct Rider;
 
 fn is_car_full(driver_name: &'static str, space: usize, drivers: &Vec<Person<Driver>>) -> bool {
-    let found = drivers.iter().find(|candidate| candidate.name == driver_name);
+    let found = drivers
+        .iter()
+        .find(|candidate| candidate.name == driver_name);
 
     match found {
-        Some(Person { variant: Some(driver), .. }) => driver.total_space == space,
-        _ => true // default
+        Some(Person {
+            variant: Some(driver),
+            ..
+        }) => driver.total_space == space,
+        _ => true, // default
     }
 }
 
-fn rider_is_taken(rider_name: &'static str, assignments: &HashMap<&'static str, Vec<&'static str>>) -> bool {
+fn rider_is_taken(
+    rider_name: &'static str,
+    assignments: &HashMap<&'static str, Vec<&'static str>>,
+) -> bool {
     assignments.values().any(|list| list.contains(&rider_name))
 }
 
-fn strongest_match(rider_name: &'static str, driver_name: &'static str, assignments: &HashMap<&'static str, Vec<&'static str>>, drivers: &Vec<Person<Driver>>) -> bool {
+fn strongest_match(
+    rider_name: &'static str,
+    driver_name: &'static str,
+    assignments: &HashMap<&'static str, Vec<&'static str>>,
+    drivers: &Vec<Person<Driver>>,
+) -> bool {
     // since we're iterating over the rider's preference, that'll already be covered.
     // we know: rider prefers this driver the most.
 
     let option = drivers.iter().find(|driver| driver.name == driver_name);
 
     if let Some(driver) = option {
-        let first_available_pref = driver.preferences.iter().find(|r| !rider_is_taken(r, assignments));
+        let first_available_pref = driver
+            .preferences
+            .iter()
+            .find(|r| !rider_is_taken(r, assignments));
 
         return match first_available_pref {
             Some(name) => *name == rider_name,
-            None => false
+            None => false,
         };
     }
     // get driver's first available pref
@@ -72,14 +86,14 @@ fn main() {
 
     let drivers: Vec<Person<Driver>> = vec![
         Person::<Driver>::new("Eric", vec!["Tom", "Tim", "Max", "Leonardo"], 3),
-        Person::<Driver>::new("Charles", vec!["Max", "Leonardo", "Tom", "Tim"], 3)
+        Person::<Driver>::new("Charles", vec!["Max", "Leonardo", "Tom", "Tim"], 3),
     ];
 
     let riders: Vec<Person<Rider>> = vec![
         Person::<Rider>::new("Tom", vec!["Eric", "Charles"]),
         Person::<Rider>::new("Max", vec!["Charles", "Eric"]),
         Person::<Rider>::new("Leonardo", vec!["Charles", "Eric"]),
-        Person::<Rider>::new("Tim", vec!["Eric", "Charles"])
+        Person::<Rider>::new("Tim", vec!["Eric", "Charles"]),
     ];
 
     let total_riders = riders.len();
@@ -94,11 +108,13 @@ fn main() {
                 for pref_name in &rider.preferences {
                     let car = assignments.entry(pref_name).or_insert_with(|| vec![]);
 
-                    if !is_car_full(pref_name, car.len(), &drivers) && strongest_match(rider.name, pref_name, &assignments, &drivers) {
+                    if !is_car_full(pref_name, car.len(), &drivers)
+                        && strongest_match(rider.name, pref_name, &assignments, &drivers)
+                    {
                         if let Some(car) = assignments.get_mut(pref_name) {
                             println!("Assigning rider {} to driver {}", rider.name, pref_name);
                             car.push(rider.name);
-                            
+
                             filled += 1;
                         }
                     }
