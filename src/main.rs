@@ -43,13 +43,28 @@ fn is_car_full(driver_name: &'static str, seats: &Vec<&'static str>, drivers: &V
     }
 }
 
-// loop through `assignments` ref
 fn rider_is_taken(rider_name: &'static str, assignments: &HashMap<&'static str, Vec<&'static str>>) -> bool {
     assignments.values().any(|list| list.contains(&rider_name))
 }
 
-fn strongest_match(rider_name: &'static str, driver_name: &'static str, assignments: &HashMap<&'static str, Vec<&'static str>>) -> bool {
-    true
+fn strongest_match(rider_name: &'static str, driver_name: &'static str, assignments: &HashMap<&'static str, Vec<&'static str>>, drivers: &Vec<Person<Driver>>) -> bool {
+    // since we're iterating over the rider's preference, that'll already be covered.
+    // we know: rider prefers this driver the most.
+
+    let option = drivers.iter().find(|driver| driver.name == driver_name);
+
+    if let Some(driver) = option {
+        let first_available_pref = driver.preferences.iter().find(|r| !rider_is_taken(r, assignments));
+
+        match first_available_pref {
+            Some(name) => name == &rider_name,
+            None => false
+        };
+    }
+    // get driver's first available pref
+    // return whether driver also prefers this rider over any others that *aren't* taken
+
+    false
 }
 
 fn main() {
@@ -76,14 +91,17 @@ fn main() {
                 for pref_name in &rider.preferences {
                     match assignments.get(pref_name) {
                         Some(car_val) => {
-                            if !is_car_full(pref_name, car_val, &drivers) && strongest_match(rider.name, pref_name, &assignments) {
+                            if !is_car_full(pref_name, car_val, &drivers) && strongest_match(rider.name, pref_name, &assignments, &drivers) {
+                                // FIX no actual insertion of driver keys to hashmap
                                 if let Some(car) = assignments.get_mut(pref_name) {
+                                    println!("Assigning rider {} to driver {}", rider.name, pref_name);
                                     car.push(rider.name);
+                                    
                                     filled += 1;
                                 }
                             }
                         },
-                        None => { 
+                        None => { // FIX
                             println!("Cannot identify driver. Skipping...");
                         }
                     };
@@ -92,7 +110,3 @@ fn main() {
         }
     }
 }
-
-// Initialize with preferences for both riders and drivers
-// Find strongest preferences from both (read-only)
-// Mutate ONLY the assignments hashmap
